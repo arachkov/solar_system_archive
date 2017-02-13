@@ -66,10 +66,8 @@ int main(int argc, char* argv[]) {
 	srand ( time(NULL) );
 	double random_number=((double)rand()/(double)RAND_MAX);
 
-//	double kappa = 0.75 + random_number*0.45;
+	//double kappa = 0.75 + random_number*0.45;
 	double kappa = 1.0;
-
-	double k = 1.0;
 
 	char filename[512];
 	char rebx_filename[512];
@@ -95,7 +93,19 @@ int main(int argc, char* argv[]) {
 			p.x  = ss_pos[i][0]; 		p.y  = ss_pos[i][1];	 	p.z  = ss_pos[i][2];
 			p.vx = ss_vel[i][0]; 		p.vy = ss_vel[i][1];	 	p.vz = ss_vel[i][2];
 			p.m  = ss_mass[i];
-			reb_add(r, p); 
+
+        // boost eccentricities of planets
+            if (i != 0){
+                struct reb_particle primary = r->particles[0];
+                struct reb_orbit o= reb_tools_particle_to_orbit(r->G, p, primary);
+                double boost_ecc = kappa * o.e;
+                struct reb_particle p_boost = reb_tools_orbit_to_particle(r->G, primary, p.m, o.a, boost_ecc, o.inc, o.Omega, o.omega, o.f);
+                reb_add(r, p_boost); 
+            }
+            else{ 
+                reb_add(r,p);
+            }
+
 		}
 
 		reb_move_to_com(r);
@@ -122,15 +132,15 @@ int main(int argc, char* argv[]) {
 	}
 
 	r->simulationarchive_filename = filename;
-//	reb_integrate(r, 2.*M_PI*5e9); //time
-	reb_integrate(r, 5e2); //time
+	reb_integrate(r, 5e3); //time
+//	reb_integrate(r, 5e9); //time
 	rebx_free(rebx);
 	reb_free_simulation(r);
 
 }
 
 void heartbeat(struct reb_simulation* sim){
-    if(reb_output_check(sim, 1.e3*2.*M_PI)){
-        reb_output_timing(sim, 2.*M_PI*5e9);
+    if(reb_output_check(sim, 1.e3)){
+        reb_output_timing(sim, 5e9);
     }
 }

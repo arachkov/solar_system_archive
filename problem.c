@@ -1,11 +1,5 @@
 /**
- * Simulation Archive
- *
- * This example shows how to use the Simulation Archive.
- * We integrate a two planet system forward in time using
- * the WHFast integrator. The simulation can be interrupted
- * at any time. On the next run, the program will try to reload
- * the latest data from the Simulation Archive. 
+ * Solar System
  */
 
 #include <stdio.h>
@@ -20,6 +14,50 @@
 #include <time.h>
 
 
+double ss_pos[10][3] = 
+{
+
+	{-7.139143380212697E-03, -2.792019770161695E-03,  2.061838852554664E-04}, // Sun
+	{-1.478672233442572E-01, -4.466929775364947E-01, -2.313937582786785E-02}, // Mercury
+	{-7.257693602841776E-01, -2.529582082587794E-02,  4.137802526208009E-02}, // Venus
+	{-1.756637922977122E-01,  9.659912850526895E-01,  2.020629118443605E-04}, // Earth
+	{1.383221922520998E+00, -2.380174081741852E-02, -3.441183028447500E-02}, // Mars
+	{3.996321310086093E+00,  2.932561197358908E+00, -1.016170544300634E-01}, // Jupiter
+	{6.401416890663500E+00,  6.565250734685104E+00, -3.689211141720000E-01}, // Saturn
+	{1.442337843936191E+01, -1.373845030140273E+01, -2.379221201389048E-01}, // Uranus
+	{1.680361764335730E+01, -2.499544328458694E+01,  1.274772016011350E-01}, // Neptune
+	{-9.884006595855096E+00, -2.796081320603301E+01,  5.851020841275061E+00}, // Pluto
+};
+
+double ss_vel[10][3] = 
+{
+	{5.374260940168566E-06, -7.410965396701423E-06, -9.422862838391440E-08},
+	{2.117424563261189E-02, -7.105386404267509E-03, -2.522925180072137E-03},	
+	{5.189070188671265E-04, -2.031355258779472E-02, -3.072687386494688E-04},
+ 	{-1.722857156974862E-02, -3.015071224668472E-03, -5.859931223618532E-08},
+	{7.533013850513376E-04,  1.517888771209419E-02,  2.996589710207392E-04},
+	{-4.558376590671486E-03,  6.439863246141724E-03,  7.537593486203765E-05},
+	{-4.285166238539475E-03,  3.884579926659154E-03,  1.025155282571916E-04},
+	{2.683840344076701E-03,  2.665016541217002E-03, -2.484232267336756E-05},
+	{2.584589572083709E-03,  1.768943546348827E-03, -9.629380362804233E-05},
+	{3.044390641302692E-03, -1.537290075737863E-03, -7.173359336658472E-04},
+};
+
+double ss_mass[10] =
+{
+	1.988544e30, // Sun
+	3.302e23, // Mercury
+	48.685e23, // Venus
+	5.97219e24, // Earth
+	6.4185e23, // Mars
+	1898.13e24, // Jupiter
+	5.68319e26, // Saturn
+	86.8103e24, // Uranus
+	102.41e24, // Neptune
+	1.307e22, // Pluto
+};
+
+
 void heartbeat(struct reb_simulation* r);
 int main(int argc, char* argv[]) {
 
@@ -28,7 +66,8 @@ int main(int argc, char* argv[]) {
 	srand ( time(NULL) );
 	double random_number=((double)rand()/(double)RAND_MAX);
 
-	double kappa = 0.75 + random_number*0.45;
+//	double kappa = 0.75 + random_number*0.45;
+	double kappa = 1.0;
 
 	double k = 1.0;
 
@@ -48,29 +87,20 @@ int main(int argc, char* argv[]) {
 	if (r==NULL){
 		printf("No simulation archive found. Creating new simulation.\n");
 		r= reb_create_simulation();
-		struct reb_particle sun = {.m=1.};
-		reb_add(r, sun);
-		struct reb_particle mercury = reb_tools_orbit2d_to_particle(r->G, sun, 1./6023600, 3.870982252717257E-01+3.8*k*cm_to_au, kappa*2.056302512089075E-01, 2.912428058698772E+01*M_PI/180., 1.751155303115542E+02*M_PI/180.);
-		reb_add(r, mercury);
-		struct reb_particle venus = reb_tools_orbit2d_to_particle(r->G, sun, 1./408523.72, 7.233268496749391E-01, kappa*6.755697267164094E-03, 5.518541455452200E+01*M_PI/180., 4.990452231866427E+01*M_PI/180.);
-		reb_add(r, venus);
-		struct reb_particle earth = reb_tools_orbit2d_to_particle(r->G, sun, 3.003297890315729e-06, 1.000371833989169E+00, kappa*1.704239716781501E-02, 2.977668064579176E+02*M_PI/180., 3.581260865454548E+02*M_PI/180.);
-		reb_add(r, earth);
-		struct reb_particle mars = reb_tools_orbit2d_to_particle(r->G, sun, 1./3098708, 1.523678184302188E+00, kappa*9.331460653723893E-02, 2.865373577554387E+02*M_PI/180., 2.302024685336155E+01*M_PI/180.);
-		reb_add(r, mars);
-		struct reb_particle jupiter = reb_tools_orbit2d_to_particle(r->G, sun, 0.0009545325625181037, 5.205108604506466E+00, kappa*4.892306471604416E-02, 2.751196839758603E+02*M_PI/180., 2.063463646284857E+01*M_PI/180.);
-		reb_add(r, jupiter);
-		struct reb_particle saturn = reb_tools_orbit2d_to_particle(r->G, sun, 0.00028579654259598984, 9.581451990386764E+00, kappa*5.559928883801366E-02, 3.359006493683225E+02*M_PI/180., 3.160917714975463E+02*M_PI/180.);
-		reb_add(r, saturn);
-		struct reb_particle uranus = reb_tools_orbit2d_to_particle(r->G, sun, 4.365520702584404e-05, 1.922994520785785E+01, kappa*4.439340361752947E-02, 9.661124460893427E+01*M_PI/180., 1.458440916327605E+02*M_PI/180.);
-		reb_add(r, uranus);
-		struct reb_particle neptune = reb_tools_orbit2d_to_particle(r->G, sun, 5.149999195391201e-05, 3.009697072395906E+01, kappa*1.114818186443456E-02, 2.668275286227091E+02*M_PI/180., 2.653252378278363E+02*M_PI/180.);
-		reb_add(r, neptune);
-		struct reb_particle pluto = reb_tools_orbit2d_to_particle(r->G, sun, 6.572648128479933e-09, 3.950092123894740E+01, kappa*2.478618527514649E-01, 1.151532923291780E+02*M_PI/180., 2.385746094416748E+01*M_PI/180.);
-		reb_add(r, pluto);
+		r->G			= 1.4880826e-34;		// in AU^3 / kg / day^2.
+
+		// Initial conditions
+		for (int i=0;i<10;i++){
+			struct reb_particle p = {0};
+			p.x  = ss_pos[i][0]; 		p.y  = ss_pos[i][1];	 	p.z  = ss_pos[i][2];
+			p.vx = ss_vel[i][0]; 		p.vy = ss_vel[i][1];	 	p.vz = ss_vel[i][2];
+			p.m  = ss_mass[i];
+			reb_add(r, p); 
+		}
+
 		reb_move_to_com(r);
-		r->dt = 8./365.25*2.*M_PI;                      // 8 days, where G=1
-		r->simulationarchive_interval = 2.*M_PI*1.e3; // output data every 100000 years
+		r->dt = 8.;
+		r->simulationarchive_interval = 1.e3; // output data every 100000 years
 		r->ri_whfast.safe_mode = 0;                      
 		r->ri_whfast.corrector = 5;    
 		r->integrator = REB_INTEGRATOR_WHFAST;
@@ -92,7 +122,8 @@ int main(int argc, char* argv[]) {
 	}
 
 	r->simulationarchive_filename = filename;
-	reb_integrate(r, 2.*M_PI*5e9); //time
+//	reb_integrate(r, 2.*M_PI*5e9); //time
+	reb_integrate(r, 5e2); //time
 	rebx_free(rebx);
 	reb_free_simulation(r);
 
